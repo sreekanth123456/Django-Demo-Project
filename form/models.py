@@ -9,7 +9,7 @@ class Form1Model(models.Model):
 
 class Form2Model(models.Model):
 	unique_id = models.CharField(max_length=100, null=True, blank=True)
-	exposed_to = models.CharField(max_length=20, default='')
+	exposed_to = models.CharField(max_length=200, default='')
 	vehicle= models.CharField(max_length=200, default='')
 	year_built= models.CharField(max_length=200, default='')
 	comments = models.TextField(blank=True, null=True)

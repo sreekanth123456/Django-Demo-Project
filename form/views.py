@@ -4,6 +4,7 @@ from django.urls import reverse_lazy, reverse
 from .models import Form1Model, Form2Model
 from .forms import Form1Form, Form2Form
 from django.forms.models import model_to_dict
+import uuid
 
 class ResultView(TemplateView):
 	def process_year_built(self, year_built):
@@ -69,6 +70,7 @@ def Form_1View(request):
 		form1 = Form1Form(request.POST)
 		if form1.is_valid():
 			temp_1 = form1.save(commit=False)
+			temp_1.unique_id = str(uuid.uuid4())
 			temp_1.save()
 			return Form_2View(request, temp_1.unique_id)
 	else:
@@ -77,11 +79,14 @@ def Form_1View(request):
 	return render(request, 'form_1.html', args)
 
 
-def Form_2View(request, unique_id='erass'):
+def Form_2View(request, unique_id):
+	print(unique_id)
 	if request.method == 'POST' and 'year_built' in request.POST:
 		form2 = Form2Form(request.POST)
 		if form2.is_valid():
 			temp_2 = form2.save(commit=False)
+			temp_2.unique_id = unique_id
+			print(temp_2.unique_id)
 			temp_2.save()
 			return redirect(reverse('result', kwargs={'unique_id':unique_id}))
 	else:

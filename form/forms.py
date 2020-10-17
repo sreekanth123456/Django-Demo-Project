@@ -1,7 +1,6 @@
 from django import forms
 
 from .models import Form1Model, Form2Model
-import uuid
 
 COLORS= (
 	('B', 'Black'),
@@ -11,6 +10,7 @@ COLORS= (
 	('Y', 'Yellow'),
 	('W', 'White'),
 )
+VEHICLES_DICT= {'car': 'Car', 'bus':'Bus', 'tram':'Tramcar', 'metro':'Metro', 'Trucks':'Trucks', 'rail':'Rail'}
 VEHICLES= (
 	('car', 'Car'),
 	('bus','Bus'),
@@ -19,6 +19,7 @@ VEHICLES= (
 	('Trucks','Trucks'),
 	('rail','Rail')
 )
+
 YEAR_BUILT=(
 	('1971-1980', '1971-1980'),
 	('1981-1990', '1981-1990'),
@@ -26,6 +27,8 @@ YEAR_BUILT=(
 	('2001-2010', '2001-2010'),
 	('2011-2020', '2011-2020')
 )
+
+EXPOSED_TO_DICT = {'water':'Water', 'smoke':'Smoke', 'fire':'Fire', 'rain':'Rain', 'sun':'Sun', 'heavy_traffic':'Heavy Traffic', 'animals':'Animals'}
 EXPOSED_TO = (
 	('water','Water'),
 	('smoke','Smoke'),
@@ -37,13 +40,12 @@ EXPOSED_TO = (
 )
 
 class Form1Form(forms.ModelForm):
-	unique_id = forms.CharField(widget=forms.HiddenInput(), initial=str(uuid.uuid4()))
 	inquirer_name = forms.CharField(widget=forms.TextInput(), label='Inquirer Name')
 	expected_life = forms.DecimalField(widget=forms.NumberInput(), label='Expected Life')
 	color = forms.ChoiceField(widget = forms.RadioSelect(), choices = COLORS, label='Bridge Color')
 	class Meta:
 		model = Form1Model
-		fields = ['unique_id','inquirer_name','expected_life','color']
+		fields = ['inquirer_name','expected_life','color']
 
 class Form2Form(forms.ModelForm):
 	unique_id = forms.CharField(widget=forms.HiddenInput())
@@ -64,10 +66,14 @@ class Form2Form(forms.ModelForm):
 		if len(exposed_to) > 3:
 			raise forms.ValidationError("Do not select more than 3 options")
 
+		for i in range(len(exposed_to)):
+			exposed_to[i] = EXPOSED_TO_DICT[exposed_to[i]]
 		exposed_to = ', '.join(exposed_to)
 		return exposed_to
 
 	def clean_vehicle(self):
 		vehicle= self.cleaned_data['vehicle']
+		for i in range(len(vehicle)):
+			vehicle[i] = VEHICLES_DICT[vehicle[i]]
 		vehicle = ', '.join(vehicle)
 		return vehicle
