@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Results{% endblock %}
+{% block heading %}Results{% endblock %}
+
+
+{% block content %}
+
+	<h2>Hi {{inquirer_name}},</h2>
+	<ul>
+		<li>Unique Id for this entry: {{unique_id}}</li>
+		<li>{{year_built}}</li>
+		<li>Expected life is {{expected_life}} years</li>
+		<li>{{vehicle}}</li>
+		<li>Color of the bridge: {{color}}</li>
+		<li>The risk is {{risk_level}} as there are {{exposing_length}} factors that the bridge is exposing to.</li>
+		{% if comments is not None %}<li>Your comments: {{comments}}</li> {% endif %}
+	</ul>
+{% endblock %}

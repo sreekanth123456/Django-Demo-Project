@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Queries{% endblock %}
+{% block heading %}Queries{% endblock %}
+
+{% block content %}
+
+<table class="table">
+	<thead class="thead-light">
+		<tr>
+			<th scope="col" class="thead-dark">Unique ID</th>
+			<th scope="col">Inquirer Name</th>
+			<th scope="col">Year Built</th>
+			<th scope="col">Expected Life</th>
+			<th scope="col">Vehicles</th>
+			<th scope="col">Exposed to</th>
+			<th scope="col">Color</th>
+			<th scope="col">Comments</th>
+		</tr>
+	</thead>
+	{% for item in result %}
+	<tr scope="row">
+		<td>{{item.unique_id}}</td>
+		<td>{{item.inquirer_name}}</td>
+		<td>{{item.year_built}}</td>
+		<td>{{item.expected_life}}</td>
+		<td>{{item.exposed_to}}</td>
+		<td>{{item.vehicle}}</td>
+		<td>{{item.color}}</td>
+		<td>{{item.comments}}</td>
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}	

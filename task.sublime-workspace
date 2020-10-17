@@ -1,0 +1,710 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"lab",
+				"label"
+			],
+			[
+				"for",
+				"forms"
+			],
+			[
+				"colr",
+				"colors"
+			],
+			[
+				"year",
+				"year_built"
+			],
+			[
+				"Choice",
+				"choices"
+			],
+			[
+				"Fo",
+				"Form2Form"
+			],
+			[
+				"Form1",
+				"Form1Model"
+			],
+			[
+				"resul",
+				"result_dict"
+			],
+			[
+				"res",
+				"result_dict"
+			],
+			[
+				"user",
+				"username"
+			],
+			[
+				"fom",
+				"form_2"
+			],
+			[
+				"form1",
+				"form_1"
+			],
+			[
+				"form",
+				"form_2"
+			],
+			[
+				"Meas",
+				"MeassurementValueForm"
+			],
+			[
+				"text",
+				"textarea"
+			],
+			[
+				"cent",
+				"text-center"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "from django.shortcuts import render, redirect\nfrom django.views.generic import FormView, TemplateView\nfrom .forms import Form1\nfrom django.urls import reverse_lazy, reverse\nfrom .models import Form1Model, Form2Model\nfrom .forms import Form1Form, Form2Form\nfrom django.forms.models import model_to_dict\nfrom django.test.client import RequestFactory\n\nclass ResultView(TemplateView):\n\tdef process_year_built(self, year_built):\n\t\treturn 'It\\'s been around '+str(2020-int(year_built.split('-')[0])+5)+' years that it was built.'\n\n\tdef process_vehicle(self, vehicle):\n\t\treturn 'There are '+str(len(vehicle.split(',')))+' types of vehicles passing through this bridge'\n\n\tdef process_exposed_to(self, exposed_to):\n\t\tlevel = {1:'low', 2:'average', 3:'medium', 4: 'high', 5:'critical'}\n\t\tlength = len(exposed_to.split(','))\n\t\treturn level[length], length\n\n\tdef process_color(self, color):\n\t\tcolors = {'B':'Black','R': 'Red', 'G': 'Green', 'b': 'Blue', 'Y': 'Yellow', 'W': 'White'}\n\t\treturn colors[color]\n\n\tdef get_context_data(self, *args, **kwargs):\n\t\tcontext = super().get_context_data(**kwargs)\n\t\tunique_id = context['unique_id']\n\t\tobj = list(Form1Model.objects.filter(unique_id=unique_id))\n\t\tresult_dict = {}\n\t\tif(len(obj)>0):\n\t\t\tresult_dict = {**result_dict, **model_to_dict(obj[0])}\n\t\tobj = list(Form2Model.objects.filter(unique_id=unique_id))\n\t\tif(len(obj)>0):\n\t\t\tresult_dict = {**result_dict, **model_to_dict(obj[0])}\n\t\tcontext['inquirer_name']=result_dict['inquirer_name']\n\t\tcontext['unique_id']=result_dict['unique_id']\n\t\tcontext['year_built'] = self.process_year_built(result_dict['year_built'])\n\t\tcontext['expected_life'] = result_dict['expected_life']\n\t\tcontext['vehicle'] = self.process_vehicle(result_dict['vehicle'])\n\t\tcontext['color'] = self.process_color(result_dict['color'])\n\t\tcontext['risk_level'], context['exposing_length'] = self.process_exposed_to(result_dict['exposed_to'])\n\t\tcontext['comments'] = None if len(result_dict['comments'])==0 else result_dict['comments']\n\t\treturn context\n\n\n\ttemplate_name = 'result.html'\n\nclass QueriesView(TemplateView):\n\t\t\n\tdef get_context_data(self, *args, **kwargs):\n\t\tcontext = super().get_context_data(**kwargs)\n\t\tobj = list(Form1Model.objects.all())\n\t\tresult_dict = {}\n\t\tif(len(obj)>0):\n\t\t\tresult_dict = {**result_dict, **model_to_dict(obj[0])}\n\t\tobj = list(Form2Model.objects.filter(unique_id=unique_id))\n\t\tif(len(obj)>0):\n\t\t\tresult_dict = {**result_dict, **model_to_dict(obj[0])}\n\t\tcontext['inquirer_name']=result_dict['inquirer_name']\n\t\tcontext['unique_id']=result_dict['unique_id']\n\t\tcontext['year_built'] = self.process_year_built(result_dict['year_built'])\n\t\tcontext['expected_life'] = result_dict['expected_life']\n\t\tcontext['vehicle'] = self.process_vehicle(result_dict['vehicle'])\n\t\tcontext['color'] = self.process_color(result_dict['color'])\n\t\tcontext['risk_level'], context['exposing_length'] = self.process_exposed_to(result_dict['exposed_to'])\n\t\tcontext['comments'] = None if len(result_dict['comments'])==0 else result_dict['comments']\n\t\treturn context\n\n\n\ttemplate_name = 'queries.html'\n\n\ndef Form_1View(request):\n\tif request.method == 'POST':\n\t\tprint(request.POST)\n\t\tif 'year_built' in request.POST:\n\t\t\treturn Form_2View(request, request.POST.get('unique_id'))\t\n\t\tform1 = Form1Form(request.POST)\n\t\tif form1.is_valid():\n\t\t\ttemp_1 = form1.save(commit=False)\n\t\t\ttemp_1.save()\n\t\t\treturn Form_2View(request, temp_1.unique_id)\n\telse:\n\t\tform1 = Form1Form()\n\targs = {'form': form1}\n\treturn render(request, 'form_1.html', args)\n\n\ndef Form_2View(request, unique_id='erass'):\n\tif request.method == 'POST' and 'year_built' in request.POST:\n\t\tform2 = Form2Form(request.POST)\n\t\tif form2.is_valid():\n\t\t\ttemp_2 = form2.save(commit=False)\n\t\t\ttemp_2.save()\n\t\t\treturn redirect(reverse('result', kwargs={'unique_id':unique_id}))\n\telse:\n\t\tform2 = Form2Form(initial={'unique_id':unique_id})\n\targs = {'form': form2}\n\treturn render(request, 'form_2.html', args)\n",
+			"file": "form/views.py",
+			"file_size": 3927,
+			"file_write_time": 132473086471812880,
+			"settings":
+			{
+				"buffer_size": 3904,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/models.py",
+			"settings":
+			{
+				"buffer_size": 1061,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Bridgelife_task/urls.py",
+			"settings":
+			{
+				"buffer_size": 1123,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/templates/form_1.html",
+			"settings":
+			{
+				"buffer_size": 282,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/forms.py",
+			"settings":
+			{
+				"buffer_size": 3413,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/templates/base.html",
+			"settings":
+			{
+				"buffer_size": 1324,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/templates/form_2.html",
+			"settings":
+			{
+				"buffer_size": 281,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/admin.py",
+			"settings":
+			{
+				"buffer_size": 142,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/templates/result.html",
+			"settings":
+			{
+				"buffer_size": 522,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "form/templates/queries.html",
+			"settings":
+			{
+				"buffer_size": 524,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Bridgelife_task/settings.py",
+			"settings":
+			{
+				"buffer_size": 3205,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/Bridgelife_task",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates"
+	],
+	"file_history":
+	[
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/Bridgelife_task/urls.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/models.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/admin.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates/form_2.html",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates/form_1.html",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates/base.html",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Full Stack Developer - Bengt Lguquist/Round 2/NeuroMorpho/neuron/views.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Full Stack Developer - Bengt Lguquist/Round 2/NeuroMorpho/neuron/urls.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates/measurement.html",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/templates/form1.html",
+		"/C/Users/putta/Desktop/advanced-crispy-forms-examples-master/mysite/core/views.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/form/urls.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Bridge Life - Prof. Mohebbi/Bridgelife_task/Bridgelife_task/settings.py",
+		"/C/Users/putta/Google Drive/career/GMU/Oncampus Job Applications/GRA/Full Stack Developer - Bengt Lguquist/Round 2/NeuroMorpho/NeuroMorpho/settings.py",
+		"/C/Users/putta/Downloads/A4 (1).cpp",
+		"/C/Bitnami/wampstack-7.4.8-0/apache2/htdocs/index.html",
+		"/C/Bitnami/wampstack-7.4.8-0/apache2/htdocs/README.md",
+		"/C/Users/putta/Desktop/distribution/js/front.js",
+		"/C/Users/putta/Desktop/distribution/index.html"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+			"A4 (1).cpp",
+			"A4",
+			"",
+			"page",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"user",
+			"css_class",
+			"year_built",
+			"    ",
+			"measu",
+			"form",
+			"meas",
+			"measu",
+			"    ",
+			"user",
+			"    ",
+			"Modelform",
+			"    ",
+			"are you",
+			"data_element",
+			"node",
+			"next_node",
+			"prev_node",
+			"info",
+			"enginee",
+			"intro-bg",
+			"intro.jpg",
+			"iIntro.jpg",
+			"Intro.jpg",
+			"intro.",
+			"images.png",
+			"nitin",
+			"niti"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"\t",
+			"page_name",
+			"page",
+			"prev_page",
+			"page"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "form/views.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3904,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2162,
+								2162
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 486.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "form/models.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1061,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								301,
+								301
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "Bridgelife_task/urls.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1123,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								771,
+								771
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "form/templates/form_1.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 282,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								54,
+								25
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "form/forms.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3413,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2882,
+								2882
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 1052.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "form/templates/base.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1324,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								502,
+								502
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "form/templates/form_2.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 281,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								281,
+								281
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "form/admin.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 142,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								76,
+								76
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "form/templates/result.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 522,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								522,
+								522
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "form/templates/queries.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 524,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								89,
+								89
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "Bridgelife_task/settings.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3205,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								973,
+								973
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 378.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 27.0
+	},
+	"input":
+	{
+		"height": 39.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "task.sublime-project",
+	"replace":
+	{
+		"height": 70.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 248.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
