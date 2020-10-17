@@ -1,5 +1,13 @@
 # Django-Demo-Project
 
+## Live Demo
+
+
+[**Demo**](http://mason.gmu.edu/~sputta/bridge_life)
+
+
+## Installation
+
 1. Install Python 3.8
 
     $ sudo apt-get install python3.8
