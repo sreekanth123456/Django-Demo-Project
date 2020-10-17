@@ -1,10 +1,5 @@
 # Django-Demo-Project
 
-## Live Demo
-
-
-[**Demo**](http://mason.gmu.edu/~sputta/bridge_life)
-
 
 ## Installation
 
